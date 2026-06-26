@@ -1,13 +1,25 @@
-name: Docker Build Test
+name: Docker Build and Deploy
 
 on:
   push:
-    branches: ["main"]
+    branches: [ "main" ]
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+
       - name: Build Docker Image
         run: docker build -t my-app .
+
+      - name: Deploy to Server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST_IP }}
+          username: ubuntu
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            sudo docker stop calisan-uygulama || true
+            sudo docker rm calisan-uygulama || true
+            sudo docker run -d --name calisan-uygulama my-app
